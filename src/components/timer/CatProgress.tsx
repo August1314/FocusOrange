@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Flag } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 interface CatProgressProps {
   progress: number;
   themeColor: string;
   isActive?: boolean;
+  className?: string;
 }
 
 type CatFrame = {
@@ -92,7 +94,7 @@ function RunCatVector({
   );
 }
 
-export function CatProgress({ progress, themeColor, isActive }: CatProgressProps) {
+export function CatProgress({ progress, themeColor, isActive, className }: CatProgressProps) {
   const animDuration = isActive ? 0.4 : 1.2;
   const [frameIndex, setFrameIndex] = React.useState(0);
 
@@ -112,7 +114,7 @@ export function CatProgress({ progress, themeColor, isActive }: CatProgressProps
   }, [isActive]);
 
   return (
-    <div className="w-full h-16 relative flex items-center mb-6 px-2">
+    <div className={cn("w-full h-16 relative flex items-center mb-6 px-2", className)}>
       <div className="absolute inset-x-0 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full" />
       <motion.div
         className="absolute left-0 h-1.5 rounded-full"

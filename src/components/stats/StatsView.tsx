@@ -411,120 +411,156 @@ export function StatsView({ records, themeColor }: StatsViewProps) {
     { id: 'month', label: 'Month' },
     { id: 'year', label: 'Year' },
   ];
+  const isEmpty = focusRecords.length === 0;
 
   return (
-    <div className="space-y-6 pb-24">
-      <div className="bg-white dark:bg-slate-900 rounded-[2rem] px-8 py-6 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="grid grid-cols-3 items-center text-center">
-          <div>
-            <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{overview.sessions}</div>
-            <div className="text-sm md:text-base text-slate-500 mt-1">Sessions</div>
+    <div className="space-y-6 pb-24 xl:pb-0">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{overview.sessions}</div>
+          <div className="mt-1 text-sm text-slate-500">Focus sessions completed</div>
+        </div>
+        <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{overview.activeDays}</div>
+          <div className="mt-1 text-sm text-slate-500">Active days recorded</div>
+        </div>
+        <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-2 text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <span>{overview.streak}</span>
+            <Flame className="h-7 w-7 fill-rose-500/20 text-rose-500" />
           </div>
-          <div className="border-x border-slate-200 dark:border-slate-800">
-            <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{overview.activeDays}</div>
-            <div className="text-sm md:text-base text-slate-500 mt-1">Days</div>
-          </div>
-          <div>
-            <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 flex items-center justify-center gap-2">
-              {overview.streak} Days
-              <Flame className="w-7 h-7 text-rose-500 fill-rose-500/20" />
-            </div>
-            <div className="text-sm md:text-base text-slate-500 mt-1">Streak</div>
-          </div>
+          <div className="mt-1 text-sm text-slate-500">Current streak in days</div>
         </div>
       </div>
 
-      <YearHeatmap yearDate={anchorDate} weeks={yearHeatmap} themeColor={themeColor} />
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start xl:gap-6">
+        <div className="space-y-6">
+          <YearHeatmap yearDate={anchorDate} weeks={yearHeatmap} themeColor={themeColor} />
 
-      <div className="bg-slate-200/80 dark:bg-slate-800/80 rounded-[1.6rem] p-1.5 grid grid-cols-4 gap-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setSelectedTab(tab.id)}
-            className={cn(
-              'rounded-[1.2rem] py-3.5 text-base md:text-lg font-semibold transition-all',
-              selectedTab === tab.id
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
-                : 'text-slate-700 dark:text-slate-300'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+          <div className="rounded-[1.6rem] bg-slate-200/80 p-1.5 dark:bg-slate-800/80">
+            <div className="grid grid-cols-4 gap-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedTab(tab.id)}
+                  className={cn(
+                    'rounded-[1.2rem] py-3 text-sm font-semibold transition-all md:text-base',
+                    selectedTab === tab.id
+                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
+                      : 'text-slate-700 dark:text-slate-300'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-[1.6rem] px-6 py-7 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setAnchorDate((current) => shiftPeriod(selectedTab, current, -1))}
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-sm"
-            style={{ backgroundColor: themeColor }}
-          >
-            <ChevronLeft className="w-7 h-7" />
-          </button>
+          <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setAnchorDate((current) => shiftPeriod(selectedTab, current, -1))}
+                className="flex h-12 w-12 items-center justify-center rounded-full text-white shadow-sm"
+                style={{ backgroundColor: themeColor }}
+                aria-label="Previous period"
+              >
+                <ChevronLeft className="h-7 w-7" />
+              </button>
 
-          <div className="text-center">
-            <p className="text-xl md:text-2xl font-semibold text-slate-500">{periodChart.title}</p>
-            <p className="text-4xl md:text-5xl font-medium text-slate-900 dark:text-slate-100 mt-3">
-              {periodChart.totalLabel}
+              <div className="text-center">
+                <p className="text-xl font-semibold text-slate-500 md:text-2xl">{periodChart.title}</p>
+                <p className="mt-3 text-4xl font-medium text-slate-900 dark:text-slate-100 md:text-5xl">
+                  {periodChart.totalLabel}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setAnchorDate((current) => shiftPeriod(selectedTab, current, 1))}
+                className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-300 text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                aria-label="Next period"
+              >
+                <ChevronRight className="h-7 w-7" />
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-6">
+            <div className="h-[300px] w-full xl:h-[360px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={periodChart.data} margin={{ top: 12, right: 18, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="4 8" stroke="#cbd5e1" vertical />
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    dy={10}
+                  />
+                  <YAxis
+                    orientation="right"
+                    axisLine={false}
+                    tickLine={false}
+                    width={42}
+                    tick={{ fill: '#b3b3b3', fontSize: 12 }}
+                    ticks={yAxisTicks}
+                    tickFormatter={(value) => {
+                      if (value === 0) return '0';
+                      if (value === Math.round(periodChart.averageValue)) return 'avg';
+                      return periodChart.unitTop;
+                    }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: '#f8fafc' }}
+                    formatter={(value: number) => [`${value} min`, 'Focus']}
+                    contentStyle={{
+                      borderRadius: '14px',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.08)',
+                      backgroundColor: '#ffffff',
+                    }}
+                  />
+                  <Bar dataKey="minutes" radius={[12, 12, 0, 0]} barSize={selectedTab === 'year' ? 18 : 34}>
+                    {periodChart.data.map((entry, index) => (
+                      <Cell
+                        key={`${entry.label}-${index}`}
+                        fill={entry.minutes > 0 ? themeColor : '#e5e7eb'}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <aside className="mt-6 space-y-4 xl:mt-0 xl:sticky xl:top-24">
+          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Overview</p>
+            <div className="mt-4 space-y-4">
+              <div>
+                <p className="text-sm text-slate-500">Current range</p>
+                <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{periodChart.totalLabel}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Average slice</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatMinutes(Math.round(periodChart.averageValue))}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">View mode</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900 capitalize dark:text-slate-100">{selectedTab}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Insight</p>
+            <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              {isEmpty
+                ? 'Complete a few focus sessions and this panel will start showing trends.'
+                : `You have logged ${overview.sessions} sessions across ${overview.activeDays} active days. Keep the streak moving and the distribution above will fill out naturally.`}
             </p>
           </div>
-
-          <button
-            onClick={() => setAnchorDate((current) => shiftPeriod(selectedTab, current, 1))}
-            className="w-12 h-12 rounded-full border-2 border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500"
-          >
-            <ChevronRight className="w-7 h-7" />
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-slate-900 rounded-[1.6rem] p-5 md:p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={periodChart.data} margin={{ top: 12, right: 18, left: 0, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="4 8" stroke="#cbd5e1" vertical />
-              <XAxis
-                dataKey="label"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#9ca3af', fontSize: 12 }}
-                dy={10}
-              />
-              <YAxis
-                orientation="right"
-                axisLine={false}
-                tickLine={false}
-                width={42}
-                tick={{ fill: '#b3b3b3', fontSize: 12 }}
-                ticks={yAxisTicks}
-                tickFormatter={(value) => {
-                  if (value === 0) return '0';
-                  if (value === Math.round(periodChart.averageValue)) return 'avg';
-                  return periodChart.unitTop;
-                }}
-              />
-              <Tooltip
-                cursor={{ fill: '#f8fafc' }}
-                formatter={(value: number) => [`${value} min`, 'Focus']}
-                contentStyle={{
-                  borderRadius: '14px',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.08)',
-                  backgroundColor: '#ffffff',
-                }}
-              />
-              <Bar dataKey="minutes" radius={[12, 12, 0, 0]} barSize={selectedTab === 'year' ? 18 : 34}>
-                {periodChart.data.map((entry, index) => (
-                  <Cell
-                    key={`${entry.label}-${index}`}
-                    fill={entry.minutes > 0 ? themeColor : '#e5e7eb'}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        </aside>
       </div>
     </div>
   );

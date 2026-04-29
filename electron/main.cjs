@@ -54,6 +54,9 @@ function createWindow() {
     title: 'FocusOrange',
     backgroundColor: '#f8fafc',
     autoHideMenuBar: true,
+    ...(process.platform === 'darwin' ? {
+      titleBarStyle: 'hiddenInset',
+    } : {}),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
