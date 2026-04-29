@@ -13,6 +13,7 @@ import { FocusHistory } from './components/history/FocusHistory';
 import { StatsView } from './components/stats/StatsView';
 import { SettingsDialog } from './components/settings/SettingsDialog';
 import { TimerConfig, TimerMode } from './types';
+import { BarChart3, Settings, Target } from 'lucide-react';
 import { DEFAULT_CONFIG, loadSettings, migrateLegacyLocalStorageData, saveSettings } from './lib/desktop-storage';
 
 export default function App() {
@@ -86,13 +87,38 @@ export default function App() {
   };
 
   const appError = recordsError || settingsError;
-
   return (
     <div 
       className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 font-sans selection:bg-rose-100 selection:text-rose-900"
       style={themeStyle}
     >
       <div className="window-drag fixed inset-x-0 top-0 z-30 hidden h-24 bg-slate-50/92 backdrop-blur-sm dark:bg-slate-950/92 xl:block" aria-hidden="true" />
+      <header className="fixed inset-x-0 top-0 z-40 hidden h-24 xl:block">
+        <div className="ml-56 flex h-full items-center px-10">
+          <div className="window-drag min-w-0 flex-1 self-stretch" aria-hidden="true" />
+
+          <div className="window-no-drag flex items-center gap-3">
+            <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+              <Target className="h-4 w-4" style={{ color: config.themeColor }} />
+              <span>{config.work}m focus</span>
+            </div>
+            <button
+              onClick={() => setCurrentView('settings')}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-slate-900 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 dark:hover:text-slate-100"
+              aria-label="Open settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setCurrentView('stats')}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-slate-900 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 dark:hover:text-slate-100"
+              aria-label="Open stats"
+            >
+              <BarChart3 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </header>
 
       <div className="mx-auto max-w-3xl px-6 py-12 md:py-16 xl:max-w-none xl:px-0 xl:py-0">
         <div className="xl:grid xl:grid-cols-[224px_minmax(0,1fr)] xl:items-start xl:gap-8">

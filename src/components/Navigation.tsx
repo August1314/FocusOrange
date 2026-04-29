@@ -47,7 +47,11 @@ export function Navigation({ currentView, onViewChange, themeColor }: Navigation
       </nav>
 
       <aside className="window-no-drag hidden xl:fixed xl:inset-y-0 xl:left-0 xl:flex xl:w-56 xl:flex-col xl:border-r xl:border-slate-200 xl:bg-slate-100/70 xl:backdrop-blur-sm xl:dark:border-slate-800 xl:dark:bg-slate-900/70">
-        <div className="h-24 border-b border-slate-200/90 dark:border-slate-800/90" />
+        <div className="flex h-24 items-center border-b border-slate-200/90 px-6 dark:border-slate-800/90">
+          <div className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            FocusOrange
+          </div>
+        </div>
 
         <div className="flex flex-1 flex-col justify-between">
           <div className="px-4 py-6">
