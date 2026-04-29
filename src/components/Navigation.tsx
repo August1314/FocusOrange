@@ -46,24 +46,20 @@ export function Navigation({ currentView, onViewChange, themeColor }: Navigation
         ))}
       </nav>
 
-      <aside className="window-no-drag hidden xl:fixed xl:inset-y-0 xl:left-0 xl:flex xl:w-56 xl:flex-col xl:border-r xl:border-slate-200 xl:bg-slate-100/70 xl:backdrop-blur-sm xl:dark:border-slate-800 xl:dark:bg-slate-900/70">
-        <div className="flex h-24 items-center border-b border-slate-200/90 px-6 dark:border-slate-800/90">
-          <div className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            FocusOrange
-          </div>
-        </div>
+      <aside className="window-no-drag hidden xl:fixed xl:inset-y-0 xl:left-0 xl:flex xl:w-56 xl:flex-col xl:border-r xl:border-slate-200 xl:bg-slate-100 xl:dark:border-slate-800 xl:dark:bg-slate-900">
+        <div className="h-16 border-b border-slate-200/90 dark:border-slate-800/90" />
 
         <div className="flex flex-1 flex-col justify-between">
-          <div className="px-4 py-6">
+          <div className="px-0 py-0">
             {primaryTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => onViewChange(tab.id as ViewType)}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-[1.1rem] px-5 py-4 text-left transition-colors',
+                  'flex w-full items-center gap-3 px-7 py-4 text-left transition-colors',
                   currentView === tab.id
-                    ? 'bg-slate-200/75 text-slate-900 dark:bg-slate-800/80 dark:text-slate-50'
-                    : 'text-slate-500 hover:bg-slate-200/45 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/40 dark:hover:text-slate-100'
+                    ? 'bg-slate-200/80 text-slate-900 dark:bg-slate-800/85 dark:text-slate-50'
+                    : 'text-slate-500 hover:bg-slate-200/35 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/35 dark:hover:text-slate-100'
                 )}
               >
                 <tab.icon className={cn('h-6 w-6', currentView === tab.id ? 'text-slate-700 dark:text-slate-200' : '')} />
@@ -74,14 +70,14 @@ export function Navigation({ currentView, onViewChange, themeColor }: Navigation
             ))}
           </div>
 
-          <div className="border-t border-slate-200/90 px-4 py-6 dark:border-slate-800/90">
+          <div className="border-t border-slate-200/90 px-0 py-0 dark:border-slate-800/90">
             <button
               onClick={() => onViewChange(settingsTab.id)}
               className={cn(
-                'flex w-full items-center gap-3 rounded-[1.1rem] px-5 py-4 text-left transition-colors',
+                'flex w-full items-center gap-3 px-7 py-4 text-left transition-colors',
                 currentView === settingsTab.id
-                  ? 'bg-slate-200/75 text-slate-900 dark:bg-slate-800/80 dark:text-slate-50'
-                  : 'text-slate-500 hover:bg-slate-200/45 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/40 dark:hover:text-slate-100'
+                  ? 'bg-slate-200/80 text-slate-900 dark:bg-slate-800/85 dark:text-slate-50'
+                  : 'text-slate-500 hover:bg-slate-200/35 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/35 dark:hover:text-slate-100'
               )}
             >
               <settingsTab.icon className={cn('h-6 w-6', currentView === settingsTab.id ? 'text-slate-700 dark:text-slate-200' : '')} />
