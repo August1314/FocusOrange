@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { TimerMode, TimerConfig } from '../types';
+import focusCompleteMeow from '../assets/sounds/focus-complete-meow.mp3';
 
 interface UseTimerProps {
   config: TimerConfig;
-  onSessionComplete: (mode: TimerMode, baseDuration: number, actualDuration: number, overtimeMinutes: number) => void;
+  onSessionComplete: (mode: TimerMode, baseDuration: number, actualDuration: number, overtimeMinutes: number) => void | Promise<void>;
 }
 
 export function useTimer({ config, onSessionComplete }: UseTimerProps) {
@@ -37,7 +38,7 @@ export function useTimer({ config, onSessionComplete }: UseTimerProps) {
             setIsOvertime(true);
             // Play alert sound when focus period is over
             try {
-              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+              const audio = new Audio(focusCompleteMeow);
               audio.play();
             } catch (e) {
               console.warn("Audio playback failed", e);

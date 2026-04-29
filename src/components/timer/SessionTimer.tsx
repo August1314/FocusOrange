@@ -67,7 +67,7 @@ export function SessionTimer({
 
       <CatProgress 
         progress={progress} 
-        themeColor={isWorkMode ? themeColor : '#10b981'} 
+        themeColor={isWorkMode ? themeColor : '#10b981'}
         isActive={isActive} 
       />
 

@@ -35,3 +35,31 @@ export interface UserSettings {
   autoStartPomodoros: boolean;
   longBreakInterval: number;
 }
+
+export type FocusRecordPatch = Partial<Omit<FocusRecord, 'id'>>;
+
+export interface DesktopBridge {
+  records: {
+    getAll: () => Promise<FocusRecord[]>;
+    create: (record: FocusRecord) => Promise<FocusRecord[]>;
+    update: (id: string, patch: FocusRecordPatch) => Promise<FocusRecord[]>;
+    delete: (id: string) => Promise<FocusRecord[]>;
+  };
+  settings: {
+    get: () => Promise<TimerConfig>;
+    save: (config: TimerConfig) => Promise<TimerConfig>;
+  };
+  migration: {
+    getState: () => Promise<{
+      recordsMissing: boolean;
+      settingsMissing: boolean;
+    }>;
+    importLegacyData: (payload: {
+      records?: FocusRecord[];
+      settings?: TimerConfig;
+    }) => Promise<{
+      records: FocusRecord[];
+      settings: TimerConfig;
+    }>;
+  };
+}

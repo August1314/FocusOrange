@@ -1,48 +1,87 @@
 import { useState, useEffect } from 'react';
-import { FocusRecord } from '../types';
-
-const STORAGE_KEY = 'focus_records';
+import { FocusRecord, FocusRecordPatch } from '../types';
+import {
+  createRecord as persistCreateRecord,
+  deleteRecord as persistDeleteRecord,
+  loadRecords,
+  migrateLegacyLocalStorageData,
+  updateRecord as persistUpdateRecord,
+} from '../lib/desktop-storage';
 
 export function useRecords() {
   const [records, setRecords] = useState<FocusRecord[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setRecords(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to parse records", e);
-      }
-    }
+    let cancelled = false;
+
+    migrateLegacyLocalStorageData()
+      .then(() => loadRecords())
+      .then((loadedRecords) => {
+        if (!cancelled) {
+          setRecords(loadedRecords);
+          setError(null);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('Failed to load records', e);
+          setError('Failed to load session history.');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const saveRecords = (newRecords: FocusRecord[]) => {
-    setRecords(newRecords);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newRecords));
-  };
-
-  const addRecord = (record: Omit<FocusRecord, 'id'>) => {
+  const addRecord = async (record: Omit<FocusRecord, 'id'>) => {
     const newRecord: FocusRecord = {
       ...record,
       id: crypto.randomUUID(),
     };
-    saveRecords([newRecord, ...records]);
+
+    try {
+      const nextRecords = await persistCreateRecord(newRecord);
+      setRecords(nextRecords);
+      setError(null);
+    } catch (e) {
+      console.error('Failed to save record', e);
+      setError('Failed to save session record.');
+    }
   };
 
-  const updateRecordNote = (id: string, note: string) => {
-    saveRecords(
-      records.map((r) => (r.id === id ? { ...r, note } : r))
-    );
+  const updateRecord = async (id: string, patch: FocusRecordPatch) => {
+    try {
+      const nextRecords = await persistUpdateRecord(id, patch);
+      setRecords(nextRecords);
+      setError(null);
+    } catch (e) {
+      console.error('Failed to update record', e);
+      setError('Failed to update session record.');
+    }
   };
 
-  const deleteRecord = (id: string) => {
-    saveRecords(records.filter((r) => r.id !== id));
+  const updateRecordNote = async (id: string, note: string) => {
+    await updateRecord(id, { note });
+  };
+
+  const deleteRecord = async (id: string) => {
+    try {
+      const nextRecords = await persistDeleteRecord(id);
+      setRecords(nextRecords);
+      setError(null);
+    } catch (e) {
+      console.error('Failed to delete record', e);
+      setError('Failed to delete session record.');
+    }
   };
 
   return {
     records,
+    error,
     addRecord,
+    updateRecord,
     updateRecordNote,
     deleteRecord,
   };

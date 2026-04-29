@@ -1,6 +1,10 @@
 node_modules/
 build/
 dist/
+release/
+release-app/
+release-dmg/
+preview-audio/
 coverage/
 .DS_Store
 *.log

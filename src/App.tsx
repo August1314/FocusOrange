@@ -14,24 +14,53 @@ import { StatsView } from './components/stats/StatsView';
 import { SettingsDialog } from './components/settings/SettingsDialog';
 import { TimerConfig, TimerMode } from './types';
 import { Sparkles } from 'lucide-react';
+import { DEFAULT_CONFIG, loadSettings, migrateLegacyLocalStorageData, saveSettings } from './lib/desktop-storage';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('timer');
-  const [config, setConfig] = useState<TimerConfig>(() => {
-    const saved = localStorage.getItem('timer_config');
-    const defaultData = { work: 25, shortBreak: 5, longBreak: 15, themeColor: '#FF8C42' };
-    return saved ? { ...defaultData, ...JSON.parse(saved) } : defaultData;
-  });
+  const [config, setConfig] = useState<TimerConfig>(DEFAULT_CONFIG);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
 
   const themeStyle = {
     '--theme-primary': config.themeColor,
     '--theme-primary-soft': `${config.themeColor}20`, // 20 (hex) is approx 12.5% opacity
   } as React.CSSProperties;
 
-  const { records, addRecord, updateRecordNote, deleteRecord } = useRecords();
+  const { records, error: recordsError, addRecord, updateRecordNote, deleteRecord } = useRecords();
 
-  const onSessionComplete = (mode: TimerMode, baseDuration: number, actualDuration: number, overtimeMinutes: number) => {
-    addRecord({
+  useEffect(() => {
+    let cancelled = false;
+
+    async function bootstrapSettings() {
+      try {
+        const migrated = await migrateLegacyLocalStorageData();
+        if (migrated && !cancelled) {
+          setConfig(migrated.settings);
+        }
+
+        const loadedConfig = await loadSettings();
+        if (!cancelled) {
+          setConfig(loadedConfig);
+          setSettingsError(null);
+        }
+      } catch (error) {
+        console.error('Failed to load settings', error);
+        if (!cancelled) {
+          setConfig(DEFAULT_CONFIG);
+          setSettingsError('Failed to load saved settings. Using defaults.');
+        }
+      }
+    }
+
+    bootstrapSettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const onSessionComplete = async (mode: TimerMode, baseDuration: number, actualDuration: number, overtimeMinutes: number) => {
+    await addRecord({
       startTime: new Date(Date.now() - actualDuration * 60000).toISOString(),
       endTime: new Date().toISOString(),
       baseDuration,
@@ -45,11 +74,19 @@ export default function App() {
 
   const timer = useTimer({ config, onSessionComplete });
 
-  const handleUpdateConfig = (newConfig: TimerConfig) => {
-    setConfig(newConfig);
-    localStorage.setItem('timer_config', JSON.stringify(newConfig));
-    setCurrentView('timer');
+  const handleUpdateConfig = async (newConfig: TimerConfig) => {
+    try {
+      const savedConfig = await saveSettings(newConfig);
+      setConfig(savedConfig);
+      setSettingsError(null);
+      setCurrentView('timer');
+    } catch (error) {
+      console.error('Failed to save settings', error);
+      setSettingsError('Failed to save settings.');
+    }
   };
+
+  const appError = recordsError || settingsError;
 
   return (
     <div 
@@ -85,6 +122,11 @@ export default function App() {
 
         {/* Dynamic Content */}
         <main className="min-h-[500px]">
+          {appError && (
+            <div className="mb-6 px-4 py-3 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 text-sm font-medium">
+              {appError}
+            </div>
+          )}
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -142,4 +184,3 @@ export default function App() {
     </div>
   );
 }
-
