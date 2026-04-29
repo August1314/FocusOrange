@@ -92,8 +92,8 @@ export default function App() {
       className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 font-sans selection:bg-rose-100 selection:text-rose-900"
       style={themeStyle}
     >
-      <div className="window-drag fixed inset-x-0 top-0 z-30 hidden h-16 bg-slate-50/90 backdrop-blur-sm dark:bg-slate-950/90 xl:block" aria-hidden="true" />
-      <header className="fixed inset-x-0 top-0 z-40 hidden h-16 xl:block">
+      <div className="window-drag fixed inset-x-0 top-0 z-30 hidden h-16 bg-slate-50/90 backdrop-blur-sm dark:bg-slate-950/90 lg:block" aria-hidden="true" />
+      <header className="fixed inset-x-0 top-0 z-40 hidden h-16 lg:block">
         <div className="ml-56 flex h-full items-center px-6">
           <div className="window-drag min-w-0 flex-1 self-stretch" aria-hidden="true" />
 
@@ -116,12 +116,12 @@ export default function App() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-6 py-12 md:py-16 xl:max-w-none xl:px-0 xl:py-0">
-        <div className="xl:grid xl:grid-cols-[224px_minmax(0,1fr)] xl:items-start xl:gap-6">
-          <div className="xl:order-2">
-            <main className="min-h-[500px] xl:ml-0 xl:pt-20 xl:pr-8 xl:pb-10">
+      <div className="mx-auto max-w-3xl px-6 py-12 md:py-16 lg:max-w-none lg:px-0 lg:py-0">
+        <div className="lg:grid lg:grid-cols-[224px_minmax(0,1fr)] lg:items-start lg:gap-6">
+          <div className="lg:order-2">
+            <main className="min-h-[500px] lg:ml-0 lg:pt-20 lg:pr-8 lg:pb-10">
               {appError && (
-                <div className="mb-6 mx-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 xl:mx-0">
+                <div className="mb-6 mx-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 lg:mx-0">
                   {appError}
                 </div>
               )}
@@ -175,7 +175,7 @@ export default function App() {
             </main>
           </div>
 
-          <div className="xl:order-1">
+          <div className="lg:order-1">
             <Navigation currentView={currentView} onViewChange={setCurrentView} themeColor={config.themeColor} />
           </div>
         </div>

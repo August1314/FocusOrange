@@ -23,7 +23,7 @@ export function Navigation({ currentView, onViewChange, themeColor }: Navigation
     <>
       <nav
         aria-label="Primary"
-        className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90 xl:hidden"
+        className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90 lg:hidden"
       >
         {mobileTabs.map((tab) => (
           <button
@@ -46,7 +46,7 @@ export function Navigation({ currentView, onViewChange, themeColor }: Navigation
         ))}
       </nav>
 
-      <aside className="window-no-drag hidden xl:fixed xl:inset-y-0 xl:left-0 xl:flex xl:w-56 xl:flex-col xl:border-r xl:border-slate-200 xl:bg-slate-100 xl:dark:border-slate-800 xl:dark:bg-slate-900">
+      <aside className="window-no-drag hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-56 lg:flex-col lg:border-r lg:border-slate-200 lg:bg-slate-100 lg:dark:border-slate-800 lg:dark:bg-slate-900">
         <div className="h-16 border-b border-slate-200/90 dark:border-slate-800/90" />
 
         <div className="flex flex-1 flex-col justify-between">
