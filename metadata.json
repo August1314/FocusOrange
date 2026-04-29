@@ -1,0 +1,6 @@
+{
+  "name": "FocusFlow Pomodoro",
+  "description": "A feature-rich Pomodoro timer with local history persistence, editable task notes, and visual productivity analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
