@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./build/icon.png" alt="FocusOrange Icon" width="120" />
+  <img src="./docs/readme-assets/icon.png" alt="FocusOrange Icon" width="120" />
   <h1>FocusOrange</h1>
   <p>一款围绕番茄钟、奔跑小猫反馈和本地数据连续性设计的桌面专注应用。</p>
   <p>
