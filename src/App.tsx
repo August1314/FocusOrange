@@ -96,8 +96,8 @@ export default function App() {
       <div className="max-w-3xl mx-auto px-6 py-12 md:py-16">
         
         {/* Bento Header */}
-        <header className="flex justify-between items-center mb-10 px-2">
-          <div className="flex items-center gap-3">
+        <header className="flex items-center gap-4 mb-10 px-2 min-h-12 window-no-drag">
+          <div className="flex items-center gap-3 window-no-drag">
             <div 
               className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-200 dark:shadow-none"
               style={{ backgroundColor: config.themeColor }}
@@ -109,8 +109,10 @@ export default function App() {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Productivity Studio</p>
             </div>
           </div>
+
+          <div className="flex-1 self-stretch window-drag" aria-hidden="true" />
           
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 window-no-drag">
              <div 
                className="px-4 py-2 bg-white dark:bg-slate-900 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors shadow-sm"
                style={{ borderColor: `${config.themeColor}30`, color: config.themeColor }}
