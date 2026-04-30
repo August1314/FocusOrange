@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Flag } from 'lucide-react';
+import { Flag, Trophy } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface CatProgressProps {
@@ -45,6 +45,14 @@ const RUN_CAT_FRAMES: CatFrame[] = [
 ];
 
 const CAT_REAR_FOOT_OFFSET_PX = 26;
+const CELEBRATION_PARTICLES = [
+  { x: -24, y: -36 },
+  { x: 18, y: -42 },
+  { x: -32, y: -12 },
+  { x: 28, y: -18 },
+  { x: -10, y: -50 },
+  { x: 34, y: -4 },
+];
 
 function PixelRects({
   rects,
@@ -80,7 +88,7 @@ function RunCatVector({
       viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="block overflow-visible drop-shadow-sm"
+      className="block overflow-visible drop-shadow-md"
       shapeRendering="crispEdges"
       preserveAspectRatio="xMinYMid meet"
       aria-hidden="true"
@@ -113,25 +121,62 @@ export function CatProgress({ progress, themeColor, isActive, className }: CatPr
     };
   }, [isActive]);
 
+  const isComplete = progress >= 1;
+
   return (
     <div className={cn("w-full h-16 relative flex items-center mb-6 px-2", className)}>
-      <div className="absolute inset-x-0 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full" />
+      {/* Background track */}
+      <div className="absolute inset-x-0 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+        {/* Animated gradient track */}
+        <motion.div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: `linear-gradient(90deg, transparent, ${themeColor}40, transparent)`,
+            backgroundSize: '200% 100%',
+          }}
+          animate={isActive ? { backgroundPosition: ['200% 0%', '-200% 0%'] } : {}}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+        />
+      </div>
+
+      {/* Progress fill */}
       <motion.div
-        className="absolute left-0 h-1.5 rounded-full"
+        className="absolute left-0 h-2 rounded-full"
         style={{ backgroundColor: themeColor }}
         animate={{ width: `${progress * 100}%` }}
         initial={false}
         transition={{ type: 'spring', stiffness: 40, damping: 20 }}
-      />
+      >
+        {/* Glow effect */}
+        <motion.div
+          className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full blur-md"
+          style={{ backgroundColor: themeColor }}
+          animate={isActive ? { opacity: [0.4, 0.8, 0.4], scale: [1, 1.3, 1] } : { opacity: 0.3 }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+      </motion.div>
 
+      {/* Start marker */}
       <div className="absolute left-0 -top-2 flex flex-col items-center">
-        <Flag className="w-4 h-4 text-slate-300" />
+        <Flag className="w-4 h-4 text-slate-300 dark:text-slate-600" />
       </div>
 
+      {/* End marker */}
       <div className="absolute right-0 -top-2 flex flex-col items-center">
-        <Flag className="w-4 h-4 text-emerald-400 opacity-50" />
+        {isComplete ? (
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+          >
+            <Trophy className="w-4 h-4 text-amber-500" />
+          </motion.div>
+        ) : (
+          <Flag className="w-4 h-4 text-slate-300 dark:text-slate-600 opacity-50" />
+        )}
       </div>
 
+      {/* Cat character */}
       <motion.div
         className="absolute z-10"
         style={{ left: `${progress * 100}%`, transform: `translateX(-${CAT_REAR_FOOT_OFFSET_PX}px)` }}
@@ -139,7 +184,7 @@ export function CatProgress({ progress, themeColor, isActive, className }: CatPr
         transition={{ type: 'spring', stiffness: 40, damping: 20 }}
       >
         <motion.div
-          animate={isActive ? { y: [0, -3, 0] } : {}}
+          animate={isActive ? { y: [0, -4, 0] } : {}}
           transition={{
             duration: 0.38,
             repeat: Infinity,
@@ -149,21 +194,63 @@ export function CatProgress({ progress, themeColor, isActive, className }: CatPr
         >
           <RunCatVector frame={RUN_CAT_FRAMES[frameIndex]} themeColor={themeColor} />
 
+          {/* Dust particles */}
           {isActive && (
             <div className="absolute -left-2 bottom-0 flex gap-1">
               <motion.div
-                animate={{ opacity: [0, 0.6, 0], x: [0, -15], scale: [0.4, 0.8] }}
+                animate={{ opacity: [0, 0.7, 0], x: [0, -20], scale: [0.4, 0.9], y: [0, -5] }}
                 transition={{ duration: animDuration, repeat: Infinity }}
-                className="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700"
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: `${themeColor}40` }}
               />
               <motion.div
-                animate={{ opacity: [0, 0.4, 0], x: [0, -25], scale: [0.3, 0.6] }}
+                animate={{ opacity: [0, 0.5, 0], x: [0, -30], scale: [0.3, 0.7], y: [0, -8] }}
                 transition={{ duration: animDuration, repeat: Infinity, delay: 0.1 }}
-                className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-800"
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: `${themeColor}30` }}
+              />
+              <motion.div
+                animate={{ opacity: [0, 0.3, 0], x: [0, -40], scale: [0.2, 0.5], y: [0, -12] }}
+                transition={{ duration: animDuration, repeat: Infinity, delay: 0.2 }}
+                className="w-1 h-1 rounded-full"
+                style={{ backgroundColor: `${themeColor}20` }}
               />
             </div>
           )}
+
+          {/* Celebration particles on complete */}
+          {isComplete && (
+            <div className="absolute inset-0 pointer-events-none">
+              {CELEBRATION_PARTICLES.map((particle, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1.5 h-1.5 rounded-full"
+                  style={{
+                    backgroundColor: themeColor,
+                    left: '50%',
+                    top: '50%',
+                  }}
+                  initial={{ scale: 0, x: 0, y: 0 }}
+                  animate={{
+                    scale: [0, 1, 0],
+                    x: [0, particle.x],
+                    y: [0, particle.y],
+                  }}
+                  transition={{ duration: 1, delay: i * 0.1, repeat: Infinity, repeatDelay: 2 }}
+                />
+              ))}
+            </div>
+          )}
         </motion.div>
+      </motion.div>
+
+      {/* Progress percentage */}
+      <motion.div
+        className="absolute -bottom-6 right-0 text-[10px] font-bold text-slate-400"
+        animate={{ opacity: isActive ? [0.5, 1, 0.5] : 0.5 }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        {Math.round(progress * 100)}%
       </motion.div>
     </div>
   );

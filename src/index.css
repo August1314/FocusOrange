@@ -1,9 +1,176 @@
 @import "tailwindcss";
 
+@theme {
+  /* Custom color scales for better theming */
+  --color-primary-50: color-mix(in oklch, var(--theme-primary, #FF8C42) 8%, white);
+  --color-primary-100: color-mix(in oklch, var(--theme-primary, #FF8C42) 15%, white);
+  --color-primary-200: color-mix(in oklch, var(--theme-primary, #FF8C42) 25%, white);
+  --color-primary-300: color-mix(in oklch, var(--theme-primary, #FF8C42) 40%, white);
+  --color-primary-400: color-mix(in oklch, var(--theme-primary, #FF8C42) 60%, white);
+  --color-primary-500: var(--theme-primary, #FF8C42);
+  --color-primary-600: color-mix(in oklch, var(--theme-primary, #FF8C42) 85%, black);
+  --color-primary-700: color-mix(in oklch, var(--theme-primary, #FF8C42) 70%, black);
+
+  /* Smooth easing curves */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Base styles */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Window drag regions for Electron */
 .window-drag {
   -webkit-app-region: drag;
 }
 
 .window-no-drag {
   -webkit-app-region: no-drag;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--theme-primary, #FF8C42) 30%, transparent);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--theme-primary, #FF8C42) 50%, transparent);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--theme-primary-soft, #FF8C4220);
+  color: inherit;
+}
+
+/* Focus visible styles */
+*:focus-visible {
+  outline: 2px solid var(--theme-primary, #FF8C42);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, select {
+  transition: all 0.2s var(--ease-out-expo);
+}
+
+/* Card hover lift effect */
+.card-hover {
+  transition: transform 0.3s var(--ease-out-expo), box-shadow 0.3s var(--ease-out-expo);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px -12px color-mix(in oklch, var(--theme-primary, #FF8C42) 15%, rgb(0 0 0 / 0.1));
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--theme-primary, #FF8C42), color-mix(in oklch, var(--theme-primary, #FF8C42) 70%, #e11d48));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+/* Animated gradient border */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gradient-border {
+  position: relative;
+  background: linear-gradient(var(--tw-gradient-from), var(--tw-gradient-to));
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--theme-primary, #FF8C42), #e11d48, #a855f7, var(--theme-primary, #FF8C42));
+  background-size: 300% 300%;
+  animation: gradient-shift 8s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Pulse animation for active states */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 3s var(--ease-in-out-sine) infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--theme-primary, #FF8C42) 10%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Number counter animation helper */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-animate {
+  animation: count-up 0.5s var(--ease-out-expo) forwards;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

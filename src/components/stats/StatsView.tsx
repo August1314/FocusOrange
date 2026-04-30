@@ -35,7 +35,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronLeft, ChevronRight, Flame, TrendingUp, Calendar, Target, Zap } from 'lucide-react';
 import { FocusRecord, TimerMode } from '../../types';
 import { cn } from '../../lib/utils';
 
@@ -57,11 +58,9 @@ type HeatmapWeek = HeatmapDay[];
 
 function chunkWeeks(days: HeatmapDay[]) {
   const weeks: HeatmapWeek[] = [];
-
   for (let index = 0; index < days.length; index += 7) {
     weeks.push(days.slice(index, index + 7));
   }
-
   return weeks;
 }
 
@@ -70,11 +69,7 @@ function hexToRgb(hex: string) {
   const value = normalized.length === 3
     ? normalized.split('').map((char) => char + char).join('')
     : normalized;
-
-  if (!/^[0-9a-fA-F]{6}$/.test(value)) {
-    return null;
-  }
-
+  if (!/^[0-9a-fA-F]{6}$/.test(value)) return null;
   return {
     r: Number.parseInt(value.slice(0, 2), 16),
     g: Number.parseInt(value.slice(2, 4), 16),
@@ -83,17 +78,10 @@ function hexToRgb(hex: string) {
 }
 
 function getHeatColor(themeColor: string, level: number) {
-  if (level === 0) {
-    return '#e5e7eb';
-  }
-
+  if (level === 0) return '#e2e8f0';
   const rgb = hexToRgb(themeColor);
-  const alpha = [0, 0.26, 0.42, 0.62, 0.88][level];
-
-  if (!rgb) {
-    return themeColor;
-  }
-
+  const alpha = [0, 0.22, 0.38, 0.58, 0.85][level];
+  if (!rgb) return themeColor;
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
@@ -108,29 +96,19 @@ function getLevel(count: number) {
 function formatMinutes(totalMinutes: number) {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-
-  if (hours <= 0) {
-    return `${minutes}m`;
-  }
-
+  if (hours <= 0) return `${minutes}m`;
   return `${hours}h ${minutes}m`;
 }
 
 function getStreakDays(records: FocusRecord[]) {
   const today = startOfToday();
   let streak = 0;
-
   for (let offset = 0; offset < 365; offset += 1) {
     const date = subDays(today, offset);
     const hasSession = records.some((record) => isSameDay(parseISO(record.startTime), date));
-
-    if (!hasSession) {
-      break;
-    }
-
+    if (!hasSession) break;
     streak += 1;
   }
-
   return streak;
 }
 
@@ -143,7 +121,6 @@ function buildYearHeatmap(yearDate: Date, records: FocusRecord[]) {
 
   const days = allDays.map((date) => {
     const dayRecords = records.filter((record) => isSameDay(parseISO(record.startTime), date));
-
     return {
       date,
       count: dayRecords.length,
@@ -157,60 +134,52 @@ function buildYearHeatmap(yearDate: Date, records: FocusRecord[]) {
 
 function getHeatmapMonthLabels(weeks: HeatmapWeek[]) {
   let lastLabel = '';
-
   return weeks.map((week, index) => {
     const monthAnchor = week.find((day) => day.inYear && day.date.getDate() <= 7);
-
     if (!monthAnchor) {
       if (index === 0) {
         lastLabel = format(week[0].date, 'MMM');
         return lastLabel;
       }
-
       return '';
     }
-
     const currentLabel = format(monthAnchor.date, 'MMM');
-
-    if (currentLabel === lastLabel) {
-      return '';
-    }
-
+    if (currentLabel === lastLabel) return '';
     lastLabel = currentLabel;
     return currentLabel;
   });
 }
 
-function YearHeatmap({
-  yearDate,
-  weeks,
-  themeColor,
-}: {
-  yearDate: Date;
-  weeks: HeatmapWeek[];
-  themeColor: string;
-}) {
+function YearHeatmap({ yearDate, weeks, themeColor }: { yearDate: Date; weeks: HeatmapWeek[]; themeColor: string }) {
   const labels = getHeatmapMonthLabels(weeks);
   const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+    <motion.div
+      className="bg-white/90 dark:bg-slate-900/90 rounded-[2rem] p-6 md:p-8 shadow-xl shadow-slate-200/30 dark:shadow-slate-900/20 border border-slate-200/80 dark:border-slate-700/50 backdrop-blur-xl"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Activity Heatmap</h3>
+          <p className="text-sm text-slate-500 mt-1">{format(yearDate, 'yyyy')}</p>
+        </div>
+      </div>
+
       <div className="overflow-x-auto overflow-y-hidden">
         <div className="inline-flex gap-3 min-w-max">
           <div className="pt-8 flex flex-col gap-1.5 text-[11px] font-medium text-slate-500">
             {weekdayLabels.map((label, index) => (
-              <div key={index} className="w-4 h-4 flex items-center justify-center">
-                {label}
-              </div>
+              <div key={index} className="w-4 h-4 flex items-center justify-center">{label}</div>
             ))}
           </div>
 
           <div className="space-y-3">
             <div className="flex gap-1.5 text-sm text-slate-500">
               {labels.map((label, index) => (
-                <div key={`${label}-${index}`} className="w-4">
-                  {label}
-                </div>
+                <div key={`${label}-${index}`} className="w-4">{label}</div>
               ))}
             </div>
 
@@ -218,13 +187,15 @@ function YearHeatmap({
               {weeks.map((week, weekIndex) => (
                 <div key={weekIndex} className="flex flex-col gap-1.5">
                   {week.map((day) => (
-                    <div
+                    <motion.div
                       key={day.date.toISOString()}
-                      className="w-4 h-4 rounded-[3px]"
+                      className="w-4 h-4 rounded-[3px] cursor-pointer"
                       style={{
                         backgroundColor: day.inYear ? getHeatColor(themeColor, getLevel(day.count)) : 'transparent',
                       }}
                       title={`${format(day.date, 'yyyy-MM-dd')} · ${day.count} sessions · ${day.minutes} minutes`}
+                      whileHover={{ scale: 1.4 }}
+                      transition={{ duration: 0.2 }}
                     />
                   ))}
                 </div>
@@ -237,44 +208,25 @@ function YearHeatmap({
       <div className="flex items-center justify-end gap-2 mt-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
         <span>Less</span>
         {[0, 1, 2, 3, 4].map((level) => (
-          <div
-            key={level}
-            className="w-4 h-4 rounded-[3px]"
-            style={{ backgroundColor: getHeatColor(themeColor, level) }}
-          />
+          <div key={level} className="w-4 h-4 rounded-[3px]" style={{ backgroundColor: getHeatColor(themeColor, level) }} />
         ))}
         <span>More</span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 function getPeriodBounds(tab: PeriodTab, anchorDate: Date) {
   if (tab === 'day') {
-    return {
-      start: startOfDay(anchorDate),
-      end: endOfDay(anchorDate),
-    };
+    return { start: startOfDay(anchorDate), end: endOfDay(anchorDate) };
   }
-
   if (tab === 'week') {
-    return {
-      start: startOfWeek(anchorDate, { weekStartsOn: 1 }),
-      end: endOfWeek(anchorDate, { weekStartsOn: 1 }),
-    };
+    return { start: startOfWeek(anchorDate, { weekStartsOn: 1 }), end: endOfWeek(anchorDate, { weekStartsOn: 1 }) };
   }
-
   if (tab === 'month') {
-    return {
-      start: startOfMonth(anchorDate),
-      end: endOfMonth(anchorDate),
-    };
+    return { start: startOfMonth(anchorDate), end: endOfMonth(anchorDate) };
   }
-
-  return {
-    start: startOfYear(anchorDate),
-    end: endOfYear(anchorDate),
-  };
+  return { start: startOfYear(anchorDate), end: endOfYear(anchorDate) };
 }
 
 function shiftPeriod(tab: PeriodTab, anchorDate: Date, direction: -1 | 1) {
@@ -313,7 +265,7 @@ function buildPeriodChart(tab: PeriodTab, anchorDate: Date, records: FocusRecord
   if (tab === 'week') {
     const days = eachDayOfInterval({ start: bounds.start, end: bounds.end });
     return {
-      title: `This Week, ${format(bounds.start, 'MMM d')}–${format(bounds.end, 'MMM d')}`,
+      title: `${format(bounds.start, 'MMM d')}–${format(bounds.end, 'MMM d')}`,
       totalLabel: formatMinutes(totalMinutes),
       averageValue: totalMinutes / Math.max(days.length, 1),
       unitTop: '3h',
@@ -330,7 +282,7 @@ function buildPeriodChart(tab: PeriodTab, anchorDate: Date, records: FocusRecord
   if (tab === 'month') {
     const weeks = eachWeekOfInterval({ start: bounds.start, end: bounds.end }, { weekStartsOn: 1 });
     return {
-      title: `This Month, ${format(bounds.start, 'MMMM yyyy')}`,
+      title: format(bounds.start, 'MMMM yyyy'),
       totalLabel: formatMinutes(totalMinutes),
       averageValue: totalMinutes / Math.max(weeks.length, 1),
       unitTop: '12h',
@@ -350,7 +302,7 @@ function buildPeriodChart(tab: PeriodTab, anchorDate: Date, records: FocusRecord
 
   const months = eachMonthOfInterval({ start: bounds.start, end: bounds.end });
   return {
-    title: `This Year, ${format(bounds.start, 'yyyy')}`,
+    title: format(bounds.start, 'yyyy'),
     totalLabel: formatMinutes(totalMinutes),
     averageValue: totalMinutes / Math.max(months.length, 1),
     unitTop: '40h',
@@ -386,6 +338,7 @@ export function StatsView({ records, themeColor }: StatsViewProps) {
       sessions: focusRecords.length,
       activeDays,
       streak: getStreakDays(focusRecords),
+      totalMinutes: focusRecords.reduce((sum, record) => sum + (record.actualDuration || 0), 0),
     };
   }, [focusRecords]);
 
@@ -398,102 +351,159 @@ export function StatsView({ records, themeColor }: StatsViewProps) {
     () => buildPeriodChart(selectedTab, anchorDate, focusRecords),
     [selectedTab, anchorDate, focusRecords]
   );
+
   const yAxisTicks = useMemo(() => {
     const maxValue = Math.max(...periodChart.data.map((item) => item.minutes), 0);
     const avgValue = Math.round(periodChart.averageValue);
-
     return Array.from(new Set([0, avgValue, maxValue])).sort((a, b) => a - b);
   }, [periodChart]);
 
-  const tabs: Array<{ id: PeriodTab; label: string }> = [
-    { id: 'day', label: 'Day' },
-    { id: 'week', label: 'Week' },
-    { id: 'month', label: 'Month' },
-    { id: 'year', label: 'Year' },
+  const tabs: Array<{ id: PeriodTab; label: string; icon: React.ElementType }> = [
+    { id: 'day', label: 'Day', icon: Zap },
+    { id: 'week', label: 'Week', icon: Calendar },
+    { id: 'month', label: 'Month', icon: TrendingUp },
+    { id: 'year', label: 'Year', icon: Target },
   ];
+
   const isEmpty = focusRecords.length === 0;
 
   return (
     <div className="space-y-6 pb-24 xl:pb-0">
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{overview.sessions}</div>
-          <div className="mt-1 text-sm text-slate-500">Focus sessions completed</div>
-        </div>
-        <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{overview.activeDays}</div>
-          <div className="mt-1 text-sm text-slate-500">Active days recorded</div>
-        </div>
-        <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center gap-2 text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            <span>{overview.streak}</span>
-            <Flame className="h-7 w-7 fill-rose-500/20 text-rose-500" />
-          </div>
-          <div className="mt-1 text-sm text-slate-500">Current streak in days</div>
-        </div>
-      </div>
+      {/* Overview Cards */}
+      <motion.div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        {[
+          { label: 'Focus Sessions', value: overview.sessions, icon: Target, color: themeColor, suffix: '' },
+          { label: 'Active Days', value: overview.activeDays, icon: Calendar, color: '#0ea5e9', suffix: '' },
+          { label: 'Current Streak', value: overview.streak, icon: Flame, color: '#f43f5e', suffix: ' days' },
+          { label: 'Total Time', value: formatMinutes(overview.totalMinutes), icon: TrendingUp, color: '#10b981', suffix: '' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="rounded-[1.6rem] border border-slate-200/80 bg-white/90 px-6 py-5 shadow-lg shadow-slate-200/20 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/90 dark:shadow-slate-900/20"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className="p-2 rounded-xl"
+                style={{ backgroundColor: `${stat.color}15` }}
+              >
+                <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{stat.label}</span>
+            </div>
+            <motion.p
+              className="text-3xl font-bold text-slate-900 dark:text-slate-100"
+              key={stat.value}
+              initial={{ scale: 1.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              {stat.value}{stat.suffix}
+            </motion.p>
+          </motion.div>
+        ))}
+      </motion.div>
 
-      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start xl:gap-6">
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start xl:gap-6">
         <div className="space-y-6">
+          {/* Heatmap */}
           <YearHeatmap yearDate={anchorDate} weeks={yearHeatmap} themeColor={themeColor} />
 
-          <div className="rounded-[1.6rem] bg-slate-200/80 p-1.5 dark:bg-slate-800/80">
+          {/* Period Tabs */}
+          <motion.div
+            className="rounded-[1.6rem] bg-slate-100/80 p-1.5 dark:bg-slate-800/80 backdrop-blur-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             <div className="grid grid-cols-4 gap-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setSelectedTab(tab.id)}
                   className={cn(
-                    'rounded-[1.2rem] py-3 text-sm font-semibold transition-all md:text-base',
+                    'rounded-[1.2rem] py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2',
                     selectedTab === tab.id
-                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
-                      : 'text-slate-700 dark:text-slate-300'
+                      ? 'bg-white text-slate-900 shadow-md dark:bg-slate-900 dark:text-slate-100'
+                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                   )}
                 >
-                  {tab.label}
+                  <tab.icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white px-6 py-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          {/* Period Navigation */}
+          <motion.div
+            className="rounded-[1.6rem] border border-slate-200/80 bg-white/90 px-6 py-7 shadow-xl shadow-slate-200/30 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/90 dark:shadow-slate-900/20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <div className="flex items-center justify-between">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setAnchorDate((current) => shiftPeriod(selectedTab, current, -1))}
-                className="flex h-12 w-12 items-center justify-center rounded-full text-white shadow-sm"
-                style={{ backgroundColor: themeColor }}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg"
+                style={{
+                  backgroundColor: themeColor,
+                  boxShadow: `0 4px 15px -2px ${themeColor}50`
+                }}
                 aria-label="Previous period"
               >
-                <ChevronLeft className="h-7 w-7" />
-              </button>
+                <ChevronLeft className="h-6 w-6" />
+              </motion.button>
 
               <div className="text-center">
-                <p className="text-xl font-semibold text-slate-500 md:text-2xl">{periodChart.title}</p>
-                <p className="mt-3 text-4xl font-medium text-slate-900 dark:text-slate-100 md:text-5xl">
+                <p className="text-lg font-semibold text-slate-500">{periodChart.title}</p>
+                <motion.p
+                  className="mt-2 text-4xl font-bold text-slate-900 dark:text-slate-100 md:text-5xl"
+                  key={periodChart.totalLabel}
+                  initial={{ scale: 1.1 }}
+                  animate={{ scale: 1 }}
+                >
                   {periodChart.totalLabel}
-                </p>
+                </motion.p>
               </div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setAnchorDate((current) => shiftPeriod(selectedTab, current, 1))}
-                className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-300 text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-slate-200 text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-600 dark:border-slate-700 dark:text-slate-500 dark:hover:border-slate-600 dark:hover:text-slate-300"
                 aria-label="Next period"
               >
-                <ChevronRight className="h-7 w-7" />
-              </button>
+                <ChevronRight className="h-6 w-6" />
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-6">
+          {/* Chart */}
+          <motion.div
+            className="rounded-[1.6rem] border border-slate-200/80 bg-white/90 p-5 shadow-xl shadow-slate-200/30 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/90 dark:shadow-slate-900/20 md:p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
             <div className="h-[300px] w-full xl:h-[360px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={periodChart.data} margin={{ top: 12, right: 18, left: 0, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="4 8" stroke="#cbd5e1" vertical />
+                  <CartesianGrid strokeDasharray="4 8" stroke="#e2e8f0" vertical={false} />
                   <XAxis
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    tick={{ fill: '#94a3af', fontSize: 12 }}
                     dy={10}
                   />
                   <YAxis
@@ -501,7 +511,7 @@ export function StatsView({ records, themeColor }: StatsViewProps) {
                     axisLine={false}
                     tickLine={false}
                     width={42}
-                    tick={{ fill: '#b3b3b3', fontSize: 12 }}
+                    tick={{ fill: '#94a3af', fontSize: 12 }}
                     ticks={yAxisTicks}
                     tickFormatter={(value) => {
                       if (value === 0) return '0';
@@ -510,56 +520,83 @@ export function StatsView({ records, themeColor }: StatsViewProps) {
                     }}
                   />
                   <Tooltip
-                    cursor={{ fill: '#f8fafc' }}
+                    cursor={{ fill: '#f1f5f9' }}
                     formatter={(value: number) => [`${value} min`, 'Focus']}
                     contentStyle={{
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       border: '1px solid #e2e8f0',
-                      boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.08)',
+                      boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
                       backgroundColor: '#ffffff',
+                      padding: '12px 16px',
                     }}
+                    labelStyle={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}
                   />
                   <Bar dataKey="minutes" radius={[12, 12, 0, 0]} barSize={selectedTab === 'year' ? 18 : 34}>
                     {periodChart.data.map((entry, index) => (
                       <Cell
                         key={`${entry.label}-${index}`}
-                        fill={entry.minutes > 0 ? themeColor : '#e5e7eb'}
+                        fill={entry.minutes > 0 ? themeColor : '#e2e8f0'}
                       />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </motion.div>
         </div>
 
+        {/* Sidebar */}
         <aside className="mt-6 space-y-4 xl:mt-0 xl:sticky xl:top-24">
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <motion.div
+            className="rounded-[1.6rem] border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/30 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/90 dark:shadow-slate-900/20"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Overview</p>
-            <div className="mt-4 space-y-4">
+            <div className="mt-5 space-y-5">
               <div>
                 <p className="text-sm text-slate-500">Current range</p>
-                <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{periodChart.totalLabel}</p>
+                <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-slate-100">{periodChart.totalLabel}</p>
               </div>
-              <div>
-                <p className="text-sm text-slate-500">Average slice</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatMinutes(Math.round(periodChart.averageValue))}</p>
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                <p className="text-sm text-slate-500">Average per slice</p>
+                <p className="mt-1.5 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatMinutes(Math.round(periodChart.averageValue))}</p>
               </div>
-              <div>
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                 <p className="text-sm text-slate-500">View mode</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900 capitalize dark:text-slate-100">{selectedTab}</p>
+                <p className="mt-1.5 text-lg font-semibold capitalize text-slate-900 dark:text-slate-100">{selectedTab}</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <motion.div
+            className="rounded-[1.6rem] border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/30 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/90 dark:shadow-slate-900/20"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Insight</p>
-            <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
-              {isEmpty
-                ? 'Complete a few focus sessions and this panel will start showing trends.'
-                : `You have logged ${overview.sessions} sessions across ${overview.activeDays} active days. Keep the streak moving and the distribution above will fill out naturally.`}
-            </p>
-          </div>
+            <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                {isEmpty
+                  ? 'Complete a few focus sessions and this panel will start showing trends.'
+                  : `You've completed ${overview.sessions} focus sessions across ${overview.activeDays} active days. Keep the momentum going!`}
+              </p>
+            </div>
+            {!isEmpty && overview.streak > 0 && (
+              <motion.div
+                className="mt-4 flex items-center gap-2 text-sm font-semibold"
+                style={{ color: themeColor }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Flame className="h-4 w-4" />
+                <span>{overview.streak} day streak! Keep it up!</span>
+              </motion.div>
+            )}
+          </motion.div>
         </aside>
       </div>
     </div>
