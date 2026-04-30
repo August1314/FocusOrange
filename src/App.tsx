@@ -12,21 +12,31 @@ import { SessionTimer } from './components/timer/SessionTimer';
 import { FocusHistory } from './components/history/FocusHistory';
 import { StatsView } from './components/stats/StatsView';
 import { SettingsDialog } from './components/settings/SettingsDialog';
-import { TimerConfig, TimerMode } from './types';
+import { MobileSyncConfig, TimerConfig, TimerMode } from './types';
 import { BarChart3, Settings } from 'lucide-react';
 import { DEFAULT_CONFIG, loadSettings, migrateLegacyLocalStorageData, saveSettings } from './lib/desktop-storage';
+import {
+  getPendingRecordCount,
+  loadMobileSyncConfig,
+  saveMobileSyncConfig,
+  syncPendingRecords,
+} from './lib/mobile-sync';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('timer');
   const [config, setConfig] = useState<TimerConfig>(DEFAULT_CONFIG);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [syncConfig, setSyncConfig] = useState<MobileSyncConfig>(() => loadMobileSyncConfig());
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [lastAutoSyncAttempt, setLastAutoSyncAttempt] = useState(0);
 
   const themeStyle = {
     '--theme-primary': config.themeColor,
     '--theme-primary-soft': `${config.themeColor}20`, // 20 (hex) is approx 12.5% opacity
   } as React.CSSProperties;
 
-  const { records, error: recordsError, addRecord, updateRecordNote, deleteRecord } = useRecords();
+  const { records, error: recordsError, addRecord, reloadRecords, updateRecordNote, deleteRecord } = useRecords();
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +69,12 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    getPendingRecordCount()
+      .then(setPendingSyncCount)
+      .catch(() => setPendingSyncCount(0));
+  }, [records]);
+
   const onSessionComplete = async (mode: TimerMode, baseDuration: number, actualDuration: number, overtimeMinutes: number) => {
     await addRecord({
       startTime: new Date(Date.now() - actualDuration * 60000).toISOString(),
@@ -85,6 +101,57 @@ export default function App() {
       setSettingsError('Failed to save settings.');
     }
   };
+
+  const handleSyncConfigChange = (newConfig: MobileSyncConfig) => {
+    setSyncConfig(saveMobileSyncConfig(newConfig));
+  };
+
+  const handleSyncNow = async () => {
+    try {
+      setSyncStatus('Syncing...');
+      const result = await syncPendingRecords(syncConfig);
+      await reloadRecords();
+      setPendingSyncCount(result.pending);
+      setSyncStatus(`Synced ${result.accepted} new, ${result.deleted} deleted, skipped ${result.duplicates} duplicate, rejected ${result.rejected}.`);
+    } catch (error) {
+      console.error('Failed to sync records', error);
+      setSyncStatus('Sync failed. Check the Mac API URL, token, and whether your Mac is online.');
+    }
+  };
+
+  useEffect(() => {
+    if (!syncConfig.endpoint || !syncConfig.token || pendingSyncCount === 0) {
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastAutoSyncAttempt < 30_000) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setLastAutoSyncAttempt(Date.now());
+      void handleSyncNow();
+    }, 800);
+
+    return () => window.clearTimeout(timerId);
+  }, [pendingSyncCount, syncConfig.endpoint, syncConfig.token, lastAutoSyncAttempt]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      getPendingRecordCount()
+        .then((count) => {
+          setPendingSyncCount(count);
+          if (count > 0 && syncConfig.endpoint && syncConfig.token) {
+            setLastAutoSyncAttempt(0);
+          }
+        })
+        .catch(() => setPendingSyncCount(0));
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [syncConfig.endpoint, syncConfig.token]);
 
   const appError = recordsError || settingsError;
   return (
@@ -168,6 +235,11 @@ export default function App() {
                     <SettingsDialog 
                       config={config}
                       onUpdate={handleUpdateConfig}
+                      syncConfig={syncConfig}
+                      pendingSyncCount={pendingSyncCount}
+                      syncStatus={syncStatus}
+                      onSyncConfigChange={handleSyncConfigChange}
+                      onSyncNow={handleSyncNow}
                     />
                   )}
                 </motion.div>

@@ -12,7 +12,12 @@
     "lint": "tsc --noEmit",
     "desktop": "electron .",
     "build:app": "npm run build && electron-builder --mac dir -c.directories.output=release-app",
-    "build:dmg": "npm run build && electron-builder --mac dmg -c.directories.output=release-dmg"
+    "build:dmg": "npm run build && electron-builder --mac dmg -c.directories.output=release-dmg",
+    "sync:desktop": "bash scripts/start-sync-desktop.sh",
+    "sync:quick-tunnel": "bash scripts/start-quick-tunnel.sh",
+    "sync:register-tunnel": "bash scripts/register-quick-tunnel.sh",
+    "cloudflare:pages:deploy": "npm run build && npx wrangler pages deploy dist --project-name focusorange --commit-dirty=true",
+    "cloudflare:worker:deploy": "npx wrangler deploy --config workers/sync-router/wrangler.toml"
   },
   "build": {
     "appId": "local.focusorange.app",
@@ -23,6 +28,7 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+      ".env.local",
       "package.json"
     ],
     "mac": {

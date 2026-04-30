@@ -38,12 +38,23 @@ export interface UserSettings {
 
 export type FocusRecordPatch = Partial<Omit<FocusRecord, 'id'>>;
 
+export interface MobileSyncConfig {
+  endpoint: string;
+  token: string;
+}
+
+export interface DeletedRecord {
+  id: string;
+  deletedAt: string;
+}
+
 export interface DesktopBridge {
   records: {
     getAll: () => Promise<FocusRecord[]>;
     create: (record: FocusRecord) => Promise<FocusRecord[]>;
     update: (id: string, patch: FocusRecordPatch) => Promise<FocusRecord[]>;
     delete: (id: string) => Promise<FocusRecord[]>;
+    onChanged?: (callback: () => void) => () => void;
   };
   settings: {
     get: () => Promise<TimerConfig>;

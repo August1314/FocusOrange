@@ -1,0 +1,7 @@
+tunnel: replace-with-tunnel-uuid
+credentials-file: /Users/lianglihang/.cloudflared/replace-with-tunnel-uuid.json
+
+ingress:
+  - hostname: focusorange-sync.example.com
+    service: http://127.0.0.1:33687
+  - service: http_status:404

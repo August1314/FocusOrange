@@ -8,18 +8,40 @@ import {
   updateRecord as persistUpdateRecord,
 } from '../lib/desktop-storage';
 
+function getDesktopRecordChangeListener() {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return window.focusOrangeDesktop?.records.onChanged;
+}
+
+function hasDesktopBridge() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return Boolean(window.focusOrangeDesktop);
+}
+
 export function useRecords() {
   const [records, setRecords] = useState<FocusRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const reloadRecords = async () => {
+    const loadedRecords = await loadRecords();
+    setRecords(loadedRecords);
+    setError(null);
+    return loadedRecords;
+  };
 
   useEffect(() => {
     let cancelled = false;
 
     migrateLegacyLocalStorageData()
-      .then(() => loadRecords())
-      .then((loadedRecords) => {
+      .then(() => reloadRecords())
+      .then(() => {
         if (!cancelled) {
-          setRecords(loadedRecords);
           setError(null);
         }
       })
@@ -33,6 +55,29 @@ export function useRecords() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const onChanged = getDesktopRecordChangeListener();
+    if (!onChanged) {
+      return;
+    }
+
+    return onChanged(() => {
+      void reloadRecords();
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!hasDesktopBridge()) {
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      void reloadRecords();
+    }, 10_000);
+
+    return () => window.clearInterval(timerId);
   }, []);
 
   const addRecord = async (record: Omit<FocusRecord, 'id'>) => {
@@ -81,6 +126,7 @@ export function useRecords() {
     records,
     error,
     addRecord,
+    reloadRecords,
     updateRecord,
     updateRecordNote,
     deleteRecord,

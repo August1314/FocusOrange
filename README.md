@@ -26,6 +26,8 @@ FocusOrange 是一个以番茄钟为核心的桌面专注应用。它把倒计�
 - 自定义专注时长、短休息时长、长休息时长
 - 本地保存计时配置
 - 本地保存专注记录
+- 支持本地优先的 Mac 同步 API：手机网页可先离线保存，再回传到 Mac
+- 支持基础 PWA：可部署为手机网页并添加到 iPhone 主屏幕
 - 记录完成时长、标签、备注和状态
 - 桌面版数据持久化到本机用户目录，重建 `.app` 后不会因为构建目录变化而直接丢失数据
 - 支持打包为 macOS `.app` 与 `.dmg`
@@ -78,6 +80,78 @@ npm run dev
 ```bash
 npm run desktop
 ```
+
+启用手机网页回传到 Mac 的本地同步 API：
+
+```bash
+FOCUSORANGE_SYNC_TOKEN="your-local-token" npm run desktop
+```
+
+本机日常推荐直接使用：
+
+```bash
+npm run sync:desktop
+```
+
+该命令会读取 `.env.local`，启动 Mac App、本地同步 API，并在 `FOCUSORANGE_QUICK_TUNNEL=true` 时由 App 后台启动 Quick Tunnel、自动注册到稳定 Worker。无需再手动保留第二个 Tunnel 终端。
+
+重新打包后，也可以直接双击：
+
+```text
+release-app/mac-arm64/FocusOrange.app
+```
+
+打包产物会随 App 带上当前 `.env.local`；Electron 主进程启动时会自动读取配置并管理同步后台。
+
+如果手机网页部署在 Cloudflare Pages，需要同时允许该网页来源跨域访问：
+
+```bash
+FOCUSORANGE_SYNC_TOKEN="your-local-token" \
+FOCUSORANGE_SYNC_ALLOWED_ORIGIN="https://your-pages-site.pages.dev" \
+npm run desktop
+```
+
+默认监听地址：
+
+- `http://127.0.0.1:33687`
+
+同步接口：
+
+- `GET /api/health`
+- `GET /api/records`
+- `POST /api/sync/push`
+
+除健康检查外，同步接口都需要请求头：
+
+```text
+Authorization: Bearer your-local-token
+```
+
+如果要让 iPhone 在外部网络访问，建议只通过 Cloudflare Tunnel 暴露这个本地地址；不要直接把本机端口暴露到公网。
+
+同步 API 默认不允许任意网页跨域访问。`FOCUSORANGE_SYNC_ALLOWED_ORIGIN` 需要填完整网页来源，例如 `https://focus.example.com`，多个来源可用英文逗号分隔。
+
+手机网页侧会把新完成的专注记录先写入浏览器本地存储和 IndexedDB 待同步队列。配置好 Mac API URL 和 token 后，网页会在打开、恢复联网或新增 pending 记录时自动尝试同步；设置页也保留手动同步按钮。
+
+如果只想手动调试 Tunnel，也可以用 Cloudflare Quick Tunnel 生成临时 `trycloudflare.com` 地址：
+
+```bash
+npm run sync:quick-tunnel
+```
+
+随后把生成的临时地址注册到稳定 Worker 中转：
+
+```bash
+npm run sync:register-tunnel -- https://random-words.trycloudflare.com
+```
+
+iPhone 设置页里的 Mac API URL 可以固定填：
+
+```text
+https://focusorange-sync-router.august20050716.workers.dev
+```
+
+该 Worker 只保存当前 Quick Tunnel URL 并转发请求，不保存专注记录。日常使用 `npm run sync:desktop` 时会自动注册；手动调试时 Quick Tunnel 地址变化后，重新执行注册命令即可。
 
 ## 打包
 

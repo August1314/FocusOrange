@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const RECORDS_FILE = 'focus-records.json';
+const DELETIONS_FILE = 'focus-deletions.json';
 const SETTINGS_FILE = 'settings.json';
 
 const DEFAULT_CONFIG = {
@@ -46,6 +47,7 @@ async function writeJsonAtomic(filePath, data) {
 
 function createStorageService(userDataPath) {
   const recordsPath = path.join(userDataPath, RECORDS_FILE);
+  const deletionsPath = path.join(userDataPath, DELETIONS_FILE);
   const settingsPath = path.join(userDataPath, SETTINGS_FILE);
 
   async function listRecords() {
@@ -58,10 +60,94 @@ function createStorageService(userDataPath) {
     return records;
   }
 
+  async function listDeletions() {
+    const data = await readJsonFile(deletionsPath, []);
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function saveDeletions(deletions) {
+    await writeJsonAtomic(deletionsPath, deletions);
+    return deletions;
+  }
+
+  async function addDeletions(incomingDeletions) {
+    const deletions = await listDeletions();
+    const deletionsById = new Map(deletions
+      .filter((deletion) => deletion && typeof deletion.id === 'string')
+      .map((deletion) => [deletion.id, deletion]));
+
+    for (const deletion of incomingDeletions) {
+      if (!deletion || typeof deletion.id !== 'string' || deletion.id.length === 0) {
+        continue;
+      }
+
+      const deletedAt = typeof deletion.deletedAt === 'string' ? deletion.deletedAt : new Date().toISOString();
+      deletionsById.set(deletion.id, { id: deletion.id, deletedAt });
+    }
+
+    return saveDeletions(Array.from(deletionsById.values()));
+  }
+
   async function createRecord(record) {
+    const deletedIds = new Set((await listDeletions()).map((deletion) => deletion.id));
+    if (deletedIds.has(record.id)) {
+      return listRecords();
+    }
+
     const records = await listRecords();
     const nextRecords = [record, ...records];
     return saveRecords(nextRecords);
+  }
+
+  async function mergeRecords(incomingRecords, incomingDeletions = []) {
+    const deletions = await addDeletions(incomingDeletions);
+    const deletedIds = new Set(deletions.map((deletion) => deletion.id));
+    const records = await listRecords();
+    const keptRecords = records.filter((record) => record && !deletedIds.has(record.id));
+    const existingIds = new Set(keptRecords.map((record) => record && record.id).filter(Boolean));
+    const acceptedRecords = [];
+    const duplicateIds = [];
+
+    for (const record of incomingRecords) {
+      if (deletedIds.has(record.id)) {
+        duplicateIds.push(record.id);
+        continue;
+      }
+
+      if (existingIds.has(record.id)) {
+        duplicateIds.push(record.id);
+        continue;
+      }
+
+      existingIds.add(record.id);
+      acceptedRecords.push(record);
+    }
+
+    if (acceptedRecords.length === 0) {
+      if (keptRecords.length !== records.length) {
+        await saveRecords(keptRecords);
+      }
+
+      return {
+        records: keptRecords,
+        acceptedIds: [],
+        duplicateIds,
+        deletedIds: Array.from(deletedIds),
+      };
+    }
+
+    const nextRecords = [...acceptedRecords, ...keptRecords].sort((a, b) => (
+      new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
+    ));
+
+    await saveRecords(nextRecords);
+
+    return {
+      records: nextRecords,
+      acceptedIds: acceptedRecords.map((record) => record.id),
+      duplicateIds,
+      deletedIds: Array.from(deletedIds),
+    };
   }
 
   async function updateRecord(id, patch) {
@@ -75,6 +161,7 @@ function createStorageService(userDataPath) {
   async function deleteRecord(id) {
     const records = await listRecords();
     const nextRecords = records.filter((record) => record.id !== id);
+    await addDeletions([{ id, deletedAt: new Date().toISOString() }]);
     return saveRecords(nextRecords);
   }
 
@@ -123,7 +210,9 @@ function createStorageService(userDataPath) {
 
   return {
     listRecords,
+    listDeletions,
     createRecord,
+    mergeRecords,
     updateRecord,
     deleteRecord,
     getSettings,

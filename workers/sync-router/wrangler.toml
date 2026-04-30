@@ -1,0 +1,7 @@
+name = "focusorange-sync-router"
+main = "src/index.js"
+compatibility_date = "2026-04-29"
+
+[[kv_namespaces]]
+binding = "FOCUSORANGE_SYNC"
+id = "956dd36fefa74405bec66a8077819bf1"

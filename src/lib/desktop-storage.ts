@@ -1,4 +1,5 @@
 import { DesktopBridge, FocusRecord, FocusRecordPatch, TimerConfig } from '../types';
+import { queuePendingDeletion, queuePendingRecord } from './mobile-sync';
 
 const RECORDS_STORAGE_KEY = 'focus_records';
 const SETTINGS_STORAGE_KEY = 'timer_config';
@@ -90,6 +91,7 @@ export async function createRecord(record: FocusRecord) {
   const records = readLocalStorageJson<FocusRecord[]>(RECORDS_STORAGE_KEY, []);
   const nextRecords = [record, ...records];
   writeLocalStorageJson(RECORDS_STORAGE_KEY, nextRecords);
+  await queuePendingRecord(record);
   return nextRecords;
 }
 
@@ -116,6 +118,7 @@ export async function deleteRecord(id: string) {
   const records = readLocalStorageJson<FocusRecord[]>(RECORDS_STORAGE_KEY, []);
   const nextRecords = records.filter((record) => record.id !== id);
   writeLocalStorageJson(RECORDS_STORAGE_KEY, nextRecords);
+  await queuePendingDeletion(id);
   return nextRecords;
 }
 

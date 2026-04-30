@@ -1,10 +1,15 @@
 import React from 'react';
-import { TimerConfig } from '../../types';
+import { MobileSyncConfig, TimerConfig } from '../../types';
 import { Save, RefreshCcw, Cat } from 'lucide-react';
 
 interface SettingsDialogProps {
   config: TimerConfig;
   onUpdate: (config: TimerConfig) => void;
+  syncConfig: MobileSyncConfig;
+  pendingSyncCount: number;
+  syncStatus: string | null;
+  onSyncConfigChange: (config: MobileSyncConfig) => void;
+  onSyncNow: () => void;
 }
 
 const DURATION_ITEMS = [
@@ -22,8 +27,17 @@ const COLOR_PRESETS = [
   { name: 'Warm', value: '#f97316' },
 ];
 
-export function SettingsDialog({ config, onUpdate }: SettingsDialogProps) {
+export function SettingsDialog({
+  config,
+  onUpdate,
+  syncConfig,
+  pendingSyncCount,
+  syncStatus,
+  onSyncConfigChange,
+  onSyncNow,
+}: SettingsDialogProps) {
   const [localConfig, setLocalConfig] = React.useState(config);
+  const [localSyncConfig, setLocalSyncConfig] = React.useState(syncConfig);
 
   const handleChange = (key: keyof TimerConfig, value: string | number) => {
     setLocalConfig((prev) => ({ ...prev, [key]: value }));
@@ -33,6 +47,12 @@ export function SettingsDialog({ config, onUpdate }: SettingsDialogProps) {
     const defaultConfig = { work: 25, shortBreak: 5, longBreak: 15, themeColor: '#FF8C42' };
     setLocalConfig(defaultConfig);
     onUpdate(defaultConfig);
+  };
+
+  const handleSyncConfigChange = (key: keyof MobileSyncConfig, value: string) => {
+    const nextConfig = { ...localSyncConfig, [key]: value };
+    setLocalSyncConfig(nextConfig);
+    onSyncConfigChange(nextConfig);
   };
 
   return (
@@ -157,6 +177,58 @@ export function SettingsDialog({ config, onUpdate }: SettingsDialogProps) {
         >
           <Save className="h-5 w-5" /> Save Configuration
         </button>
+      </div>
+
+      <div className="rounded-[1.6rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Mac Sync</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Keep iPhone sessions locally first, then push them to your Mac when reachable.
+            </p>
+          </div>
+          <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-500 dark:bg-zinc-800">
+            {pendingSyncCount} pending
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <label className="block">
+            <span className="text-xs font-bold text-zinc-500">Mac API URL</span>
+            <input
+              type="url"
+              value={localSyncConfig.endpoint}
+              onChange={(event) => handleSyncConfigChange('endpoint', event.target.value)}
+              placeholder="https://focus.example.com"
+              className="mt-2 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm dark:border-zinc-700 dark:bg-zinc-800"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-bold text-zinc-500">Access Token</span>
+            <input
+              type="password"
+              value={localSyncConfig.token}
+              onChange={(event) => handleSyncConfigChange('token', event.target.value)}
+              placeholder="FOCUSORANGE_ROUTER_CLIENT_TOKEN"
+              className="mt-2 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm dark:border-zinc-700 dark:bg-zinc-800"
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-xs font-medium text-zinc-500">
+            {syncStatus || 'Sync is manual in this first version.'}
+          </p>
+          <button
+            type="button"
+            onClick={onSyncNow}
+            className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-white shadow-sm"
+            style={{ backgroundColor: localConfig.themeColor }}
+          >
+            <RefreshCcw className="h-4 w-4" /> Sync to Mac
+          </button>
+        </div>
       </div>
     </div>
   );
